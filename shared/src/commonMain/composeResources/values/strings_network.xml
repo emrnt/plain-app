@@ -95,12 +95,8 @@
     <string name="enable_adb_token">Enable ADB token</string>
     <string name="internet_access">Internet Access</string>
     <string name="enable_internet_access">Enable Internet Access</string>
-    <string name="tunnel_description">Access your phone from anywhere via Cloudflare Tunnel</string>
-    <string name="tunnel_token">Tunnel token</string>
-    <string name="tunnel_domain">Tunnel domain</string>
-    <string name="tunnel_url_tips">Open %1$s in any browser</string>
+    <string name="tunnel_description">Access your phone from anywhere via TryCloudflare</string>
+    <string name="tunnel_url_tips">Open %1$s in any browser to access your phone</string>
     <string name="connected">Connected</string>
-    <string name="disconnected">Disconnected</string>
-    <string name="not_set">Not set</string>
-    <string name="configuration">Configuration</string>
+    <string name="disconnected">Not connected</string>
 </resources>

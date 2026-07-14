@@ -22,6 +22,4 @@ object Constants {
     const val ACTION_REPOST_HTTP_NOTIFICATION = "${BuildConfig.APPLICATION_ID}.action.REPOST_HTTP_NOTIFICATION"
     const val ACTION_PLAY_MEDIA = "${BuildConfig.APPLICATION_ID}.action.PLAY_MEDIA"
     const val EXTRA_MEDIA_PATH = "media_path"
-    const val ACTION_START_TUNNEL = "${BuildConfig.APPLICATION_ID}.action.START_TUNNEL"
-    const val ACTION_STOP_TUNNEL = "${BuildConfig.APPLICATION_ID}.action.STOP_TUNNEL"
 }

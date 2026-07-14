@@ -54,20 +54,14 @@ object TunnelManager {
         }
     }
 
-    fun start(context: Context, tunnelToken: String) {
-        if (tunnelToken.isBlank()) {
-            LogCat.e("Tunnel token is empty, cannot start tunnel")
-            return
-        }
-
+    fun start(context: Context, localPort: Int) {
         try {
             val binary = ensureBinary(context)
             stop()
 
             val pb = ProcessBuilder(
-                binary.absolutePath, "tunnel", "run",
-                "--token", tunnelToken,
-                "--protocol", "http2",
+                binary.absolutePath, "tunnel",
+                "--url", "http://localhost:$localPort",
                 "--no-autoupdate"
             )
             pb.directory(context.filesDir)
@@ -95,9 +89,7 @@ object TunnelManager {
                 LogCat.d("cloudflared process ended, restarting in 5s...")
                 if (isActive) {
                     delay(5000)
-                    if (tunnelUrl.value.isNotEmpty()) {
-                        start(context, tunnelToken)
-                    }
+                    start(context, localPort)
                 }
             }
         } catch (e: Exception) {

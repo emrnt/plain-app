@@ -28,7 +28,7 @@ import com.ismartcoding.plain.mdns.NsdHelper
 import com.ismartcoding.plain.TempData
 import com.ismartcoding.plain.tunnel.TunnelManager
 import com.ismartcoding.plain.tunnel.TunnelEnabledPreference
-import com.ismartcoding.plain.tunnel.TunnelTokenPreference
+import io.ktor.client.request.get
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Job
@@ -141,10 +141,7 @@ class HttpServerService : LifecycleService() {
     private suspend fun startHttpServerAsync() {
         HttpServerStartHelper.startServer(this) { serverState = it }
         if (serverState == HttpServerState.ON && TunnelEnabledPreference.getAsync()) {
-            val token = TunnelTokenPreference.getAsync()
-            if (token.isNotEmpty()) {
-                TunnelManager.start(this, token)
-            }
+            TunnelManager.start(this, TempData.httpPort.value)
         }
     }
 
