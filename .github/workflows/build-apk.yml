@@ -22,8 +22,7 @@ jobs:
 
       - name: Create release keystore
         run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore release.jks \
+          keytool -genkey -v -keystore app/release.jks \
             -alias release -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass plainapp -keypass plainapp \
             -dname "CN=PlainApp,O=PlainApp,C=US"
