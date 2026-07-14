@@ -20,22 +20,26 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create debug keystore
+      - name: Create release keystore
         run: |
           mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 \
-            -validity 10000 -storepass android -keypass android \
-            -dname "CN=Android Debug,O=Android,C=US"
+          keytool -genkey -v -keystore release.jks \
+            -alias release -keyalg RSA -keysize 2048 \
+            -validity 10000 -storepass plainapp -keypass plainapp \
+            -dname "CN=PlainApp,O=PlainApp,C=US"
+          echo "storeFile=release.jks" > keystore.properties
+          echo "keyAlias=release" >> keystore.properties
+          echo "storePassword=plainapp" >> keystore.properties
+          echo "keyPassword=plainapp" >> keystore.properties
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build APK
-        run: ./gradlew assembleGithubDebug
+        run: ./gradlew assembleGithubRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: plain-app-github-debug
-          path: app/build/outputs/apk/github/debug/*.apk
+          name: plain-app-github-release
+          path: app/build/outputs/apk/github/release/*.apk

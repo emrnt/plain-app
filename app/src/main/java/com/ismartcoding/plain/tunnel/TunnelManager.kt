@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.util.zip.GZIPInputStream
 
 object TunnelManager {
     private const val BINARY_NAME = "cloudflared"
@@ -29,10 +30,12 @@ object TunnelManager {
         if (binary.exists()) return binary
 
         val abi = getAbi()
-        val assetPath = "cloudflared/cloudflared-$abi"
+        val assetPath = "cloudflared/cloudflared-$abi.gz"
         context.assets.open(assetPath).use { input ->
-            binary.outputStream().use { output ->
-                input.copyTo(output)
+            GZIPInputStream(input).use { decompressed ->
+                binary.outputStream().use { output ->
+                    decompressed.copyTo(output)
+                }
             }
         }
         binary.setExecutable(true)
