@@ -28,7 +28,9 @@ import com.ismartcoding.plain.mdns.NsdHelper
 import com.ismartcoding.plain.TempData
 import com.ismartcoding.plain.tunnel.TunnelManager
 import com.ismartcoding.plain.tunnel.TunnelEnabledPreference
-import com.ismartcoding.plain.tunnel.NgrokAuthTokenPreference
+import com.ismartcoding.plain.tunnel.FrpServerPreference
+import com.ismartcoding.plain.tunnel.FrpPortPreference
+import com.ismartcoding.plain.tunnel.FrpDomainPreference
 import io.ktor.client.request.get
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
@@ -142,11 +144,13 @@ class HttpServerService : LifecycleService() {
     private suspend fun startHttpServerAsync() {
         HttpServerStartHelper.startServer(this) { serverState = it }
         if (serverState == HttpServerState.ON && TunnelEnabledPreference.getAsync()) {
-            val authToken = NgrokAuthTokenPreference.getAsync()
-            if (authToken.isNotEmpty()) {
-                TunnelManager.start(this, TempData.httpPort.value, authToken)
+            val server = FrpServerPreference.getAsync()
+            if (server.isNotEmpty()) {
+                val port = FrpPortPreference.getAsync()
+                val domain = FrpDomainPreference.getAsync()
+                TunnelManager.start(this, TempData.httpPort.value, server, port, domain)
             } else {
-                LogCat.d("Ngrok auth token not set, skipping tunnel")
+                LogCat.d("frp server address not set, skipping tunnel")
             }
         }
     }

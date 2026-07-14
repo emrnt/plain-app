@@ -9,7 +9,17 @@ object TunnelEnabledPreference : BasePreference<Boolean>() {
     override val key = booleanPreferencesKey("tunnel_enabled")
 }
 
-object NgrokAuthTokenPreference : BasePreference<String>() {
+object FrpServerPreference : BasePreference<String>() {
     override val default = ""
-    override val key = stringPreferencesKey("ngrok_auth_token")
+    override val key = stringPreferencesKey("frp_server")
+}
+
+object FrpPortPreference : BasePreference<String>() {
+    override val default = "7000"
+    override val key = stringPreferencesKey("frp_port")
+}
+
+object FrpDomainPreference : BasePreference<String>() {
+    override val default = ""
+    override val key = stringPreferencesKey("frp_domain")
 }
