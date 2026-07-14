@@ -81,7 +81,7 @@ import com.ismartcoding.plain.ui.page.web.HowToUsePage
 import com.ismartcoding.plain.ui.page.web.NotificationSettingsPage
 import com.ismartcoding.plain.ui.page.web.WebSecurityPage
 import com.ismartcoding.plain.ui.page.web.WebSettingsPage
-// import com.ismartcoding.plain.ui.page.web.TunnelSettingsPage
+import com.ismartcoding.plain.ui.page.web.TunnelSettingsPage
 import androidx.core.net.toUri
 
 @Composable
@@ -151,7 +151,7 @@ fun MainNavGraph(
         }
         composable<Routing.WebDev> { WebDevPage(navController) }
         composable<Routing.WebSecurity> { WebSecurityPage(navController) }
-        // composable<Routing.TunnelSettings> { TunnelSettingsPage(navController) }
+        composable<Routing.TunnelSettings> { TunnelSettingsPage(navController) }
         composable<Routing.Chat> { backStackEntry ->
             val r = backStackEntry.toRoute<Routing.Chat>()
             ChatPage(navController, audioPlaylistVM = audioPlaylistVM, chatVM = chatVM, peerVM = peerVM, channelVM = channelVM, r.id)

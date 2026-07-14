@@ -1,6 +1,7 @@
 package com.ismartcoding.plain.crypto
 
 import com.ismartcoding.plain.lib.helpers.CryptoHelper
+import com.ismartcoding.plain.lib.logcat.LogCat
 import org.json.JSONObject
 import java.math.BigInteger
 import java.security.KeyFactory
@@ -120,11 +121,25 @@ actual object PairingCrypto {
         val keyValueBase64 = keyData.getString("value")
         val keyValueBytes = android.util.Base64.decode(keyValueBase64, android.util.Base64.NO_WRAP)
 
-        for (i in 0 until keyValueBytes.size - 33) {
-            if (keyValueBytes[i].toInt() == 0x1a && keyValueBytes[i + 1].toInt() == 0x20) {
-                return keyValueBytes.copyOfRange(i + 2, i + 34)
+        val markers = listOf(
+            intArrayOf(0x1a, 0x20),
+            intArrayOf(0x22, 0x20),
+            intArrayOf(0x12, 0x20),
+        )
+        for ((marker1, marker2) in markers) {
+            for (i in 0 until keyValueBytes.size - 33) {
+                if (keyValueBytes[i].toInt() == marker1 && keyValueBytes[i + 1].toInt() == marker2) {
+                    return keyValueBytes.copyOfRange(i + 2, i + 34)
+                }
             }
         }
+
+        val keyLength = keyData.optInt("keyMaterialType", 0)
+        LogCat.e(
+            "[PairingCrypto] keyValueBytes hex: ${keyValueBytes.take(40).joinToString("") { "%02x".format(it) }} " +
+            "size=${keyValueBytes.size} keyMaterialType=$keyLength"
+        )
+
         throw RuntimeException("Failed to extract raw Ed25519 private key from keyset")
     }
 }
