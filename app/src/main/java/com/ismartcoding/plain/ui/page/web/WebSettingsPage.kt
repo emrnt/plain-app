@@ -79,10 +79,10 @@ fun WebSettingsPage(navController: NavHostController, webVM: WebConsoleViewModel
                             modifier = Modifier.clickable { navController.navigate(Routing.WebSecurity) },
                             icon = Res.drawable.lock, title = stringResource(Res.string.security), showMore = true
                         )
-                        PListItem(
-                            modifier = Modifier.clickable { navController.navigate(Routing.TunnelSettings) },
-                            icon = Res.drawable.devices, title = stringResource(Res.string.internet_access), showMore = true
-                        )
+                        //                         PListItem(
+//                             modifier = Modifier.clickable { navController.navigate(Routing.TunnelSettings) },
+//                             icon = Res.drawable.devices, title = stringResource(Res.string.internet_access), showMore = true
+//                         )
                         PListItem(
                             modifier = Modifier.clickable { navController.navigate(Routing.HowToUse) },
                             icon = Res.drawable.info, title = stringResource(Res.string.how_to_use), showMore = true

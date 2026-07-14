@@ -64,6 +64,7 @@ import kotlin.time.Duration.Companion.days
 class MainApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        CrashHandler.install(this)
 
         instance = this
         com.ismartcoding.plain.setAppContext(this)
