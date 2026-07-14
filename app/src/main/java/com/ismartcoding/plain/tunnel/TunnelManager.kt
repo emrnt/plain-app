@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.util.zip.GZIPInputStream
 
 object TunnelManager {
     private const val BINARY_NAME = "ngrok"
@@ -31,12 +30,10 @@ object TunnelManager {
         val abi = getAbi()
         val assetPath = "ngrok/ngrok-$abi"
         context.assets.open(assetPath).use { input ->
-            GZIPInputStream(input).use { decompressed ->
                 binary.outputStream().use { output ->
-                    decompressed.copyTo(output)
+                    input.copyTo(output)
                 }
             }
-        }
         binary.setExecutable(true)
         LogCat.d("Extracted ngrok binary for $abi to ${binary.absolutePath}")
         return binary
