@@ -2,6 +2,7 @@ package com.ismartcoding.plain.tunnel
 
 import com.ismartcoding.plain.preferences.BasePreference
 import kotlinx.serialization.json.Json
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
 private val preferencesJson = Json { ignoreUnknownKeys = true }

@@ -76,12 +76,11 @@ object TunnelManager {
 
             monitorJob = scope.launch {
                 val reader = BufferedReader(InputStreamReader(process!!.inputStream))
-                var line: String?
-                while (isActive && reader.readLine().also { line = it } != null) {
-                    val l = line ?: continue
-                    LogCat.d("cloudflared: $l")
-                    if (l.contains(".trycloudflare.com") || l.contains("https://")) {
-                        val url = l.substringAfter("https://").substringBefore(" ").let {
+                while (isActive) {
+                    val line = reader.readLine() ?: break
+                    LogCat.d("cloudflared: $line")
+                    if (line.contains(".trycloudflare.com") || line.contains("https://")) {
+                        val url = line.substringAfter("https://").substringBefore(" ").let {
                             "https://$it"
                         }.trim()
                         if (url.length > 10) {
