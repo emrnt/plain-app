@@ -66,6 +66,7 @@ object TunnelManager {
             )
             pb.directory(context.filesDir)
             pb.environment()["HOME"] = context.filesDir.absolutePath
+            pb.environment()["GODEBUG"] = "netdns=go"
             pb.redirectErrorStream(true)
 
             process = pb.start()
