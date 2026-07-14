@@ -1,7 +1,6 @@
 package com.ismartcoding.plain.tunnel
 
 import android.content.Context
-import com.ismartcoding.plain.lib.helpers.CoroutinesHelper.coIO
 import com.ismartcoding.plain.lib.logcat.LogCat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,7 @@ import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
 
 object TunnelManager {
-    private const val BINARY_NAME = "cloudflared"
+    private const val BINARY_NAME = "ngrok"
     private var process: Process? = null
     private var monitorJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -30,7 +29,7 @@ object TunnelManager {
         if (binary.exists()) return binary
 
         val abi = getAbi()
-        val assetPath = "cloudflared/cloudflared-$abi.gz"
+        val assetPath = "ngrok/ngrok-$abi.gz"
         context.assets.open(assetPath).use { input ->
             GZIPInputStream(input).use { decompressed ->
                 binary.outputStream().use { output ->
@@ -39,7 +38,7 @@ object TunnelManager {
             }
         }
         binary.setExecutable(true)
-        LogCat.d("Extracted cloudflared binary for $abi to ${binary.absolutePath}")
+        LogCat.d("Extracted ngrok binary for $abi to ${binary.absolutePath}")
         return binary
     }
 
@@ -54,26 +53,27 @@ object TunnelManager {
         }
     }
 
-    fun start(context: Context, localPort: Int) {
+    fun start(context: Context, localPort: Int, authToken: String) {
+        if (authToken.isBlank()) {
+            LogCat.e("Ngrok auth token is empty, cannot start tunnel")
+            return
+        }
+
         try {
             val binary = ensureBinary(context)
             stop()
 
-            val resolvConf = File(context.filesDir, "resolv.conf")
-            if (!resolvConf.exists()) {
-                resolvConf.writeText("nameserver 1.1.1.1\nnameserver 8.8.8.8\n")
-            }
+            val yml = File(context.filesDir, "ngrok.yml")
+            yml.writeText("version: 2\nauthtoken: $authToken\n")
 
             val pb = ProcessBuilder(
-                binary.absolutePath, "tunnel",
-                "--url", "http://localhost:$localPort",
-                "--no-autoupdate",
-                "--edge-ip-version", "4"
+                binary.absolutePath, "http",
+                "http://localhost:$localPort",
+                "--config", yml.absolutePath,
+                "--log", "stdout"
             )
             pb.directory(context.filesDir)
             pb.environment()["HOME"] = context.filesDir.absolutePath
-            pb.environment()["GODEBUG"] = "netdns=go"
-            pb.environment()["TUNNEL_FORCE_GO_DNS"] = "1"
             pb.redirectErrorStream(true)
 
             process = pb.start()
@@ -83,25 +83,24 @@ object TunnelManager {
                 val reader = BufferedReader(InputStreamReader(process!!.inputStream))
                 while (isActive) {
                     val line = reader.readLine() ?: break
-                    LogCat.d("cloudflared: $line")
-                    if (line.contains(".trycloudflare.com") || line.contains("https://")) {
-                        val url = line.substringAfter("https://").substringBefore(" ").let {
-                            "https://$it"
-                        }.trim()
+                    LogCat.d("ngrok: $line")
+                    if (line.contains("msg=\"started tunnel\"") && line.contains("url=")) {
+                        val url = line.substringAfter("url=").substringBefore(" ")
+                            .replace("tcp://", "https://").trim()
                         if (url.length > 10) {
                             tunnelUrl.value = url
-                            LogCat.d("Tunnel URL: $url")
+                            LogCat.d("Ngrok tunnel URL: $url")
                         }
                     }
                 }
-                LogCat.d("cloudflared process ended, restarting in 5s...")
+                LogCat.d("ngrok process ended, restarting in 5s...")
                 if (isActive) {
                     delay(5000)
-                    start(context, localPort)
+                    start(context, localPort, authToken)
                 }
             }
         } catch (e: Exception) {
-            LogCat.e("Failed to start tunnel: ${e.message}")
+            LogCat.e("Failed to start ngrok tunnel: ${e.message}")
             isRunning.value = false
         }
     }
@@ -115,6 +114,6 @@ object TunnelManager {
         process = null
         isRunning.value = false
         tunnelUrl.value = ""
-        LogCat.d("Tunnel stopped")
+        LogCat.d("Ngrok tunnel stopped")
     }
 }

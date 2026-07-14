@@ -28,6 +28,7 @@ import com.ismartcoding.plain.mdns.NsdHelper
 import com.ismartcoding.plain.TempData
 import com.ismartcoding.plain.tunnel.TunnelManager
 import com.ismartcoding.plain.tunnel.TunnelEnabledPreference
+import com.ismartcoding.plain.tunnel.NgrokAuthTokenPreference
 import io.ktor.client.request.get
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
@@ -141,7 +142,12 @@ class HttpServerService : LifecycleService() {
     private suspend fun startHttpServerAsync() {
         HttpServerStartHelper.startServer(this) { serverState = it }
         if (serverState == HttpServerState.ON && TunnelEnabledPreference.getAsync()) {
-            TunnelManager.start(this, TempData.httpPort.value)
+            val authToken = NgrokAuthTokenPreference.getAsync()
+            if (authToken.isNotEmpty()) {
+                TunnelManager.start(this, TempData.httpPort.value, authToken)
+            } else {
+                LogCat.d("Ngrok auth token not set, skipping tunnel")
+            }
         }
     }
 
