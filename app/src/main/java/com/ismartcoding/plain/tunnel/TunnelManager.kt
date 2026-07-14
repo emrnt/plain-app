@@ -1,7 +1,7 @@
 package com.ismartcoding.plain.tunnel
 
 import com.ismartcoding.plain.lib.logcat.LogCat
-import com.ngrok.Http
+import com.ngrok.Forwarder
 import com.ngrok.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,10 +11,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.net.URL
 
 object TunnelManager {
     private var session: Session? = null
-    private var listener: Http.Listener? = null
+    private var forwarder: Forwarder.Endpoint? = null
     private var reconnectJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -31,22 +32,20 @@ object TunnelManager {
             try {
                 stop()
 
-                val sess = Session.newBuilder(authToken)
+                val sess = Session.withAuthtoken(authToken)
                     .metadata("plain-app")
-                    .build()
+                    .connect()
 
                 session = sess
 
-                val l = sess.httpEndpoint()
+                val fwd = sess.httpEndpoint()
                     .metadata("plain-web")
-                    .listen()
+                    .forward(URL("http://localhost:$localPort"))
 
-                listener = l
-                tunnelUrl.value = l.url
+                forwarder = fwd
+                tunnelUrl.value = fwd.url
                 isRunning.value = true
-                LogCat.d("Ngrok tunnel URL: ${l.url}")
-
-                l.forwardTcp("localhost:$localPort")
+                LogCat.d("Ngrok tunnel URL: ${fwd.url}")
             } catch (e: Exception) {
                 LogCat.e("Failed to start ngrok tunnel: ${e.message}")
                 isRunning.value = false
@@ -69,9 +68,9 @@ object TunnelManager {
         reconnectJob?.cancel()
         reconnectJob = null
         try {
-            listener?.close()
+            forwarder?.close()
         } catch (_: Exception) {}
-        listener = null
+        forwarder = null
         try {
             session?.close()
         } catch (_: Exception) {}
