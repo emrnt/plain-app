@@ -20,7 +20,9 @@ jobs:
       - name: Set up Android SDK
         run: |
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          yes | /usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager
+          yes | $SDKMANAGER --licenses > /dev/null 2>&1 || true
+          $SDKMANAGER "platforms;android-37" > /dev/null 2>&1 || echo "Platform may already be installed"
 
       - name: Create debug keystore
         run: |
