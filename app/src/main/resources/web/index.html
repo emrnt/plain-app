@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes" />
+    <title>PlainApp</title>
+    <script type="module" crossorigin src="/assets/index-BKbvZm1x.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/chunk-aKtaBQYM.js">
+    <link rel="modulepreload" crossorigin href="/assets/prefs-BsL_qHAr.js">
+    <link rel="modulepreload" crossorigin href="/assets/vue.runtime.esm-bundler-DB7W0Wog.js">
+    <link rel="modulepreload" crossorigin href="/assets/vue-i18n-B9PqukX3.js">
+    <link rel="modulepreload" crossorigin href="/assets/query-CWZJUnY1.js">
+    <link rel="modulepreload" crossorigin href="/assets/temp-DBa4anHj.js">
+    <link rel="modulepreload" crossorigin href="/assets/bn-Bp07eHsL.js">
+    <link rel="modulepreload" crossorigin href="/assets/de-B9b9GVla.js">
+    <link rel="modulepreload" crossorigin href="/assets/en-US-DBVj42AF.js">
+    <link rel="modulepreload" crossorigin href="/assets/es-B4emnAws.js">
+    <link rel="modulepreload" crossorigin href="/assets/fr-CWM7Iqzj.js">
+    <link rel="modulepreload" crossorigin href="/assets/hi-CE9FEDB5.js">
+    <link rel="modulepreload" crossorigin href="/assets/it-DbVgvBPC.js">
+    <link rel="modulepreload" crossorigin href="/assets/ja-DhFZIYgx.js">
+    <link rel="modulepreload" crossorigin href="/assets/ko-BjcZpVmj.js">
+    <link rel="modulepreload" crossorigin href="/assets/nl-CrkI76CF.js">
+    <link rel="modulepreload" crossorigin href="/assets/pt-BywRrChI.js">
+    <link rel="modulepreload" crossorigin href="/assets/ru-DeWJCK68.js">
+    <link rel="modulepreload" crossorigin href="/assets/ta-2XZM5m6p.js">
+    <link rel="modulepreload" crossorigin href="/assets/tr--bTF7_6a.js">
+    <link rel="modulepreload" crossorigin href="/assets/vi-Bu11IH_c.js">
+    <link rel="modulepreload" crossorigin href="/assets/zh-CN-Bx6cX223.js">
+    <link rel="modulepreload" crossorigin href="/assets/zh-TW-B8rnpNV1.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CIThvfij.css">
+  </head>
+
+  <body>
+    <div id="browser-issue">Your browser is not supported or up-to-date. Please try updating it.</div>
+    <div id="app"></div>
+  </body>
+  <script type="text/javascript">
+    if ('customElements' in window) {
+      document.getElementById('browser-issue').style.display = 'none'
+    } else {
+      if (navigator.language === 'zh-CN') {
+        document.getElementById('browser-issue').innerHTML = '您的浏览器不支持或者版本过低，请尝试更新。'
+      }
+    }
+    
+    function isTouchDevice() {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      function handleTouchStart() {
+        document.body.classList.add('no-hover')
+        window.removeEventListener('touchstart', handleTouchStart)
+        window.addEventListener('mousemove', handleMouseMove)
+      }
+
+      function handleMouseMove() {
+        document.body.classList.remove('no-hover')
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.addEventListener('touchstart', handleTouchStart)
+      }
+
+      if (isTouchDevice()) {
+        document.body.classList.add('no-hover')
+        window.addEventListener('mousemove', handleMouseMove)
+      } else {
+        window.addEventListener('touchstart', handleTouchStart)
+      }
+    })
+  </script>
+</html>

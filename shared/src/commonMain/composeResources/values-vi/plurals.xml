@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="posts">
+        <item quantity="one">%1$d bài viết</item>
+        <item quantity="other">%1$d bài viết</item>
+    </plurals>
+    <plurals name="items">
+        <item quantity="one">%1$d mục</item>
+        <item quantity="other">%1$d mục</item>
+    </plurals>
+    <plurals name="x_folders">
+        <item quantity="one">%1$d thư mục</item>
+        <item quantity="other">%1$d thư mục</item>
+    </plurals>
+    <plurals name="x_files">
+        <item quantity="one">%1$d tập tin</item>
+        <item quantity="other">%1$d tập tin</item>
+    </plurals>
+    <plurals name="copying_items">
+        <item quantity="one">Đang sao chép %1$d mục</item>
+        <item quantity="other">Đang sao chép %1$d mục</item>
+    </plurals>
+    <plurals name="moving_items">
+        <item quantity="one">Đang di chuyển %1$d mục</item>
+        <item quantity="other">Đang di chuyển %1$d mục</item>
+    </plurals>
+    <plurals name="n_hours">
+        <item quantity="one">%1$d giờ</item>
+        <item quantity="other">%1$d giờ</item>
+    </plurals>
+    <plurals name="n_minutes">
+        <item quantity="one">%1$d phút</item>
+        <item quantity="other">%1$d phút</item>
+    </plurals>
+    <plurals name="n_seconds">
+        <item quantity="one">%1$d giây</item>
+        <item quantity="other">%1$d giây</item>
+    </plurals>
+    <plurals name="n_pomodoros">
+        <item quantity="one">%1$d pomodoro</item>
+        <item quantity="other">%1$d pomodoro</item>
+    </plurals>
+    <plurals name="today_stats_pomodoros">
+        <item quantity="one">Hôm nay: %1$d pomodoro</item>
+        <item quantity="other">Hôm nay: %1$d pomodoro</item>
+    </plurals>
+    <plurals name="total_stats_pomodoros">
+        <item quantity="one">Tổng: %1$d pomodoro</item>
+        <item quantity="other">Tổng: %1$d pomodoro</item>
+    </plurals>
+</resources>

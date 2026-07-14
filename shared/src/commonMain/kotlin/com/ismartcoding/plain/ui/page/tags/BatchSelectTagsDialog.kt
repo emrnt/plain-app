@@ -1,0 +1,96 @@
+package com.ismartcoding.plain.ui.page.tags
+
+import com.ismartcoding.plain.i18n.*
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import com.ismartcoding.plain.ui.base.PTextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.unit.dp
+import com.ismartcoding.plain.data.IData
+import com.ismartcoding.plain.db.DTag
+import com.ismartcoding.plain.enums.ButtonSize
+import com.ismartcoding.plain.ui.base.PFilledButton
+import com.ismartcoding.plain.ui.base.PSelectionChip
+import com.ismartcoding.plain.ui.components.NewTagButton
+import com.ismartcoding.plain.ui.components.TagNameDialog
+import com.ismartcoding.plain.ui.models.TagsViewModel
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun BatchSelectTagsDialog(
+    tagsVM: TagsViewModel,
+    tagsState: List<DTag>,
+    items: List<IData>,
+    removeFromTags: Boolean = false,
+    onDismiss: () -> Unit,
+) {
+    TagNameDialog(tagsVM)
+    val tagIds = remember { mutableStateListOf<String>() }
+
+    AlertDialog(
+        containerColor = MaterialTheme.colorScheme.surface,
+        onDismissRequest = {
+            onDismiss()
+        },
+        title = {
+            Text(text = stringResource(if (removeFromTags) Res.string.remove_from_tags else Res.string.add_to_tags),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            FlowRow(
+                modifier =
+                Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                tagsState.forEach { tag ->
+                    PSelectionChip(
+                        selected = tagIds.contains(tag.id),
+                        onClick = {
+                            if (tagIds.contains(tag.id)) {
+                                tagIds.remove(tag.id)
+                            } else {
+                                tagIds.add(tag.id)
+                            }
+                        },
+                        text = tag.name
+                    )
+                }
+                NewTagButton(click = {
+                    tagsVM.showAddDialog()
+                })
+            }
+        }, confirmButton = {
+            PFilledButton(
+                text = stringResource(Res.string.save),
+                buttonSize = ButtonSize.MEDIUM,
+                enabled = tagIds.isNotEmpty(),
+                onClick = {
+                    if (removeFromTags) {
+                        tagsVM.removeFromTags(items.map { it.id }.toSet(), tagIds.toSet())
+                    } else {
+                        tagsVM.addToTags(items, tagIds.toSet())
+                    }
+                    onDismiss()
+                },
+            )
+        }, dismissButton = {
+            PTextButton(text = stringResource(Res.string.cancel), onClick = { onDismiss() })
+        })
+}
+
+

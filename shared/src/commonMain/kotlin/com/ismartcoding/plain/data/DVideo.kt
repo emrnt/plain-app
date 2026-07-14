@@ -1,0 +1,30 @@
+package com.ismartcoding.plain.data
+
+import androidx.compose.ui.unit.IntSize
+import kotlin.time.Instant
+
+@kotlinx.serialization.Serializable
+data class DVideo(
+    override var id: String,
+    override val title: String,
+    override val path: String,
+    override val duration: Long,
+    override val size: Long,
+    val width: Int,
+    val height: Int,
+    val rotation: Int,
+    val bucketId: String,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+    val takenAt: Instant?,
+    val isFavorite: Boolean = false,
+) : IItemMetadata, IMedia, IData {
+
+    fun getRotatedSize(): IntSize {
+        if (rotation == 90 || rotation == 270) {
+            return IntSize(height, width)
+        }
+
+        return IntSize(width, height)
+    }
+}

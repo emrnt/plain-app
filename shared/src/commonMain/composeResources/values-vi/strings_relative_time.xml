@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="relative_time_now">Vừa xong</string>
+    <string name="relative_time_minutes_short"> phút</string>
+    <string name="relative_time_hours_short"> giờ</string>
+    <string name="relative_time_days_short"> ngày</string>
+    <string name="relative_time_weeks_short"> tuần</string>
+    <string name="relative_time_months_short"> tháng</string>
+    <string name="relative_time_years_short"> năm</string>
+    <string name="relative_time_minutes_long">%1$s phút trước</string>
+    <string name="relative_time_hours_long">%1$s giờ trước</string>
+    <string name="relative_time_days_long">%1$s ngày trước</string>
+    <string name="relative_time_weeks_long">%1$s tuần trước</string>
+    <string name="relative_time_months_long">%1$s tháng trước</string>
+    <string name="relative_time_years_long">%1$s năm trước</string>
+</resources>

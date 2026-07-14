@@ -1,0 +1,99 @@
+package com.ismartcoding.plain.ui.page.feeds
+
+import com.ismartcoding.plain.i18n.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import com.ismartcoding.plain.ui.base.PTextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.ismartcoding.plain.enums.ButtonSize
+import com.ismartcoding.plain.ui.base.PFilledButton
+import com.ismartcoding.plain.ui.base.VerticalSpace
+import com.ismartcoding.plain.ui.models.FeedsViewModel
+
+@Composable
+fun EditFeedDialog(feedsVM: FeedsViewModel) {
+    if (feedsVM.showEditDialog.value) {
+        val focusManager = LocalFocusManager.current
+        AlertDialog(
+            containerColor = MaterialTheme.colorScheme.surface,
+            onDismissRequest = {
+                feedsVM.showEditDialog.value = false
+            },
+            icon = {
+                Icon(
+                    painter = painterResource(Res.drawable.square_pen),
+                    contentDescription = stringResource(Res.string.edit),
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(Res.string.edit), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = feedsVM.editName.value,
+                        onValueChange = {
+                            feedsVM.editName.value = it
+                        },
+                        singleLine = true,
+                        label = {
+                            Text(text = stringResource(Res.string.name))
+                        }
+                    )
+                    VerticalSpace(dp = 8.dp)
+                    OutlinedTextField(
+                        value = feedsVM.editUrl.value,
+                        onValueChange = {
+                            feedsVM.editUrl.value = it
+                            if (feedsVM.editUrlError.value.isNotEmpty()) {
+                                feedsVM.editUrlError.value = ""
+                            }
+                        },
+                        singleLine = true,
+                        label = {
+                            Text(text = stringResource(Res.string.url))
+                        }
+                    )
+                    if (feedsVM.editUrlError.value.isNotEmpty()) {
+                        SelectionContainer {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                text = feedsVM.editUrlError.value,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                PFilledButton(
+                    text = stringResource(Res.string.save),
+                    buttonSize = ButtonSize.MEDIUM,
+                    enabled = feedsVM.editUrl.value.isNotBlank() && feedsVM.editName.value.isNotBlank(),
+                    onClick = {
+                        focusManager.clearFocus()
+                        feedsVM.edit()
+                    },
+                )
+            },
+            dismissButton = {
+                PTextButton(text = stringResource(Res.string.cancel), onClick = { feedsVM.showEditDialog.value = false })
+            },
+        )
+    }
+}

@@ -1,0 +1,154 @@
+package com.ismartcoding.plain.api
+
+import com.ismartcoding.plain.lib.helpers.CryptoHelper
+import com.ismartcoding.plain.lib.helpers.NetworkHelper
+import com.ismartcoding.plain.lib.logcat.LogCat
+import okhttp3.Dns
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.KeyManager
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+
+object OkHttpClientFactory {
+    fun downloadClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            // Force HTTP/1.1 — GitHub's CDN returns "Required SETTINGS preface not received"
+            // when OkHttp attempts an HTTP/2 upgrade handshake.
+            .protocols(listOf(Protocol.HTTP_1_1))
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .build()
+
+    private fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {
+        val naiveTrustManager =
+            object : X509TrustManager {
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+
+                override fun checkClientTrusted(
+                    certs: Array<X509Certificate>,
+                    authType: String,
+                ) = Unit
+
+                override fun checkServerTrusted(
+                    certs: Array<X509Certificate>,
+                    authType: String,
+                ) = Unit
+            }
+
+        val insecureSocketFactory =
+            SSLContext.getInstance("TLSv1.2").apply {
+                val trustAllCerts = arrayOf<TrustManager>(naiveTrustManager)
+                // Avoid triggering default KeyManager lookup (which can require BKS on some devices)
+                init(arrayOf<KeyManager>(), trustAllCerts, SecureRandom())
+            }.socketFactory
+
+        sslSocketFactory(insecureSocketFactory, naiveTrustManager)
+        hostnameVerifier { _, _ -> true }
+        return this
+    }
+
+    fun createCryptoHttpClient(
+        keyBytes: ByteArray,
+        timeout: Int,
+        socketFactory: SocketFactory? = null,
+        dns: Dns? = null,
+        connectTimeoutMs: Long = 1_000L,
+    ): OkHttpClient {
+        val builder =
+            OkHttpClient.Builder()
+                .addInterceptor { chain ->
+                    val request = chain.request()
+                    val requestBody = request.body!!
+                    val requestBodyStr = bodyToString(requestBody)
+                    LogCat.d("[Request] $requestBodyStr")
+                    val response =
+                        chain.proceed(
+                            request.newBuilder()
+                                .addClientHeaders()
+                                .post(CryptoHelper.chaCha20Encrypt(keyBytes, requestBodyStr).toRequestBody(requestBody.contentType()))
+                                .build(),
+                        )
+                    val responseBody = response.body
+                    val decryptedBytes = CryptoHelper.chaCha20Decrypt(keyBytes, responseBody.bytes())
+                    if (decryptedBytes != null) {
+                        val json = decryptedBytes.decodeToString()
+                        LogCat.d("[Response] $json")
+                        return@addInterceptor response.newBuilder().body(json.toResponseBody(responseBody.contentType())).build()
+                    }
+                    response.newBuilder().build()
+                }
+                .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeout.toLong(), TimeUnit.SECONDS)
+                .readTimeout(timeout.toLong(), TimeUnit.SECONDS)
+                .ignoreAllSSLErrors()
+        if (socketFactory != null) builder.socketFactory(socketFactory)
+        if (dns != null) builder.dns(dns)
+        return builder.build()
+    }
+
+    fun createUnsafeOkHttpClient(): OkHttpClient {
+        val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        })
+        val sslContext = SSLContext.getInstance("TLS")
+        // Avoid default KeyManager to prevent KeyStoreException: BKS not found
+        sslContext.init(arrayOf<KeyManager>(), trustAllCerts, SecureRandom())
+        val sslSocketFactory = sslContext.socketFactory
+
+        return OkHttpClient.Builder()
+            .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { hostname, _ ->
+                NetworkHelper.isLocalNetworkAddress(hostname)
+            }
+            .build()
+    }
+
+    /**
+     * OkHttpClient used by the [coil3.network.okhttp.OkHttpNetworkFetcherFactory] for
+     * image loading.
+     *
+     * `createUnsafeOkHttpClient()` was previously wired in here too, but that client is
+     * built for the in-app HTTP server (which uses self-signed certs on the local network)
+     * and intentionally only accepts hostnames that match
+     * [NetworkHelper.isLocalNetworkAddress]. Public hostnames like `img2.baidu.com` are
+     * therefore rejected with `SSLPeerUnverifiedException` even when the server's
+     * certificate is otherwise valid, which silently broke every markdown image whose
+     * source was a public https URL.
+     *
+     * This factory returns a stock OkHttp client: it trusts the system CA bundle
+     * (so public CAs work normally) and uses OkHttp's [okhttp3.internal.tls.OkHostnameVerifier]
+     * (so SAN-based hostname checks behave like every other Android app). The local-server
+     * self-signed-cert use case stays covered by [createUnsafeOkHttpClient].
+     */
+    fun createImageLoaderClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .build()
+
+    private fun bodyToString(request: RequestBody): String {
+        val buffer = okio.Buffer()
+        request.writeTo(buffer)
+        return buffer.readUtf8()
+    }
+}
+
+fun OkHttpClient.Builder.applyDownloadConfig(): OkHttpClient.Builder =
+    connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(120, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .addInterceptor { chain ->
+            chain.proceed(chain.request().newBuilder().addClientHeaders().build())
+        }

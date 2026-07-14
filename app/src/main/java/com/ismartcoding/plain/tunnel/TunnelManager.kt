@@ -1,0 +1,118 @@
+package com.ismartcoding.plain.tunnel
+
+import android.content.Context
+import com.ismartcoding.plain.lib.helpers.CoroutinesHelper.coIO
+import com.ismartcoding.plain.lib.logcat.LogCat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
+
+object TunnelManager {
+    private const val BINARY_NAME = "cloudflared"
+    private var process: Process? = null
+    private var monitorJob: Job? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val tunnelUrl = MutableStateFlow("")
+    val isRunning = MutableStateFlow(false)
+
+    fun ensureBinary(context: Context): File {
+        val binary = File(context.filesDir, BINARY_NAME)
+        if (binary.exists()) return binary
+
+        val abi = getAbi()
+        val assetPath = "cloudflared/cloudflared-$abi"
+        context.assets.open(assetPath).use { input ->
+            binary.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        binary.setExecutable(true)
+        LogCat.d("Extracted cloudflared binary for $abi to ${binary.absolutePath}")
+        return binary
+    }
+
+    private fun getAbi(): String {
+        val abis = android.os.Build.SUPPORTED_ABIS
+        return when {
+            abis.any { it.startsWith("arm64") } -> "arm64"
+            abis.any { it.startsWith("arm") } -> "arm"
+            abis.any { it.startsWith("x86_64") } -> "amd64"
+            abis.any { it.startsWith("x86") } -> "386"
+            else -> "arm64"
+        }
+    }
+
+    fun start(context: Context, tunnelToken: String) {
+        if (tunnelToken.isBlank()) {
+            LogCat.e("Tunnel token is empty, cannot start tunnel")
+            return
+        }
+
+        try {
+            val binary = ensureBinary(context)
+            stop()
+
+            val pb = ProcessBuilder(
+                binary.absolutePath, "tunnel", "run",
+                "--token", tunnelToken,
+                "--protocol", "http2",
+                "--no-autoupdate"
+            )
+            pb.directory(context.filesDir)
+            pb.environment()["HOME"] = context.filesDir.absolutePath
+            pb.redirectErrorStream(true)
+
+            process = pb.start()
+            isRunning.value = true
+
+            monitorJob = scope.launch {
+                val reader = BufferedReader(InputStreamReader(process!!.inputStream))
+                var line: String?
+                while (isActive && reader.readLine().also { line = it } != null) {
+                    val l = line ?: continue
+                    LogCat.d("cloudflared: $l")
+                    if (l.contains(".trycloudflare.com") || l.contains("https://")) {
+                        val url = l.substringAfter("https://").substringBefore(" ").let {
+                            "https://$it"
+                        }.trim()
+                        if (url.length > 10) {
+                            tunnelUrl.value = url
+                            LogCat.d("Tunnel URL: $url")
+                        }
+                    }
+                }
+                LogCat.d("cloudflared process ended, restarting in 5s...")
+                if (isActive) {
+                    delay(5000)
+                    if (tunnelUrl.value.isNotEmpty()) {
+                        start(context, tunnelToken)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            LogCat.e("Failed to start tunnel: ${e.message}")
+            isRunning.value = false
+        }
+    }
+
+    fun stop() {
+        monitorJob?.cancel()
+        monitorJob = null
+        try {
+            process?.destroyForcibly()
+        } catch (_: Exception) {}
+        process = null
+        isRunning.value = false
+        tunnelUrl.value = ""
+        LogCat.d("Tunnel stopped")
+    }
+}

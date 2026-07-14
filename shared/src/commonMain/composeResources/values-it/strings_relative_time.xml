@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="relative_time_now">Adesso</string>
+    <string name="relative_time_minutes_short"> min</string>
+    <string name="relative_time_hours_short"> h</string>
+    <string name="relative_time_days_short"> g</string>
+    <string name="relative_time_weeks_short"> sett</string>
+    <string name="relative_time_months_short"> mesi</string>
+    <string name="relative_time_years_short"> ann</string>
+    <string name="relative_time_minutes_long">%1$s minuti fa</string>
+    <string name="relative_time_hours_long">%1$s ore fa</string>
+    <string name="relative_time_days_long">%1$s giorni fa</string>
+    <string name="relative_time_weeks_long">%1$s settimane fa</string>
+    <string name="relative_time_months_long">%1$s mesi fa</string>
+    <string name="relative_time_years_long">%1$s anni fa</string>
+</resources>
