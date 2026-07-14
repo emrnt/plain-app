@@ -59,14 +59,21 @@ object TunnelManager {
             val binary = ensureBinary(context)
             stop()
 
+            val resolvConf = File(context.filesDir, "resolv.conf")
+            if (!resolvConf.exists()) {
+                resolvConf.writeText("nameserver 1.1.1.1\nnameserver 8.8.8.8\n")
+            }
+
             val pb = ProcessBuilder(
                 binary.absolutePath, "tunnel",
                 "--url", "http://localhost:$localPort",
-                "--no-autoupdate"
+                "--no-autoupdate",
+                "--edge-ip-version", "4"
             )
             pb.directory(context.filesDir)
             pb.environment()["HOME"] = context.filesDir.absolutePath
             pb.environment()["GODEBUG"] = "netdns=go"
+            pb.environment()["TUNNEL_FORCE_GO_DNS"] = "1"
             pb.redirectErrorStream(true)
 
             process = pb.start()
