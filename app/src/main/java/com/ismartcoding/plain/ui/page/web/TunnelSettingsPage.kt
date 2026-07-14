@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -27,9 +26,7 @@ import androidx.navigation.NavHostController
 import com.ismartcoding.plain.i18n.*
 import com.ismartcoding.plain.tunnel.TunnelManager
 import com.ismartcoding.plain.tunnel.TunnelEnabledPreference
-import com.ismartcoding.plain.tunnel.FrpServerPreference
-import com.ismartcoding.plain.tunnel.FrpPortPreference
-import com.ismartcoding.plain.tunnel.FrpDomainPreference
+import com.ismartcoding.plain.tunnel.NgrokAuthTokenPreference
 import com.ismartcoding.plain.ui.base.BottomSpace
 import com.ismartcoding.plain.ui.base.PCard
 import com.ismartcoding.plain.ui.base.PListItem
@@ -49,54 +46,41 @@ fun TunnelSettingsPage(navController: NavHostController) {
     val tunnelRunning by TunnelManager.isRunning.collectAsState()
 
     var tunnelEnabled by remember { mutableStateOf(true) }
-    var serverAddr by remember { mutableStateOf("") }
-    var serverPort by remember { mutableStateOf("7000") }
-    var domain by remember { mutableStateOf("") }
+    var authToken by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         tunnelEnabled = TunnelEnabledPreference.getAsync()
-        serverAddr = FrpServerPreference.getAsync()
-        serverPort = FrpPortPreference.getAsync()
-        domain = FrpDomainPreference.getAsync()
+        authToken = NgrokAuthTokenPreference.getAsync()
     }
 
-    var showDialog by remember { mutableStateOf("") }
+    var showTokenDialog by remember { mutableStateOf(false) }
     var dialogInput by remember { mutableStateOf("") }
 
-    if (showDialog.isNotEmpty()) {
-        val label = when (showDialog) {
-            "server" -> stringResource(Res.string.frp_server)
-            "port" -> stringResource(Res.string.frp_port)
-            "domain" -> stringResource(Res.string.frp_domain)
-            else -> ""
-        }
+    if (showTokenDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = "" },
-            title = { Text(label) },
+            onDismissRequest = { showTokenDialog = false },
+            title = { Text(stringResource(Res.string.ngrok_auth_token)) },
             text = {
                 OutlinedTextField(
                     value = dialogInput,
                     onValueChange = { dialogInput = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text(label) }
+                    label = { Text("authtoken") }
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     val trimmed = dialogInput.trim()
-                    scope.launch(Dispatchers.IO) {
-                        when (showDialog) {
-                            "server" -> { serverAddr = trimmed; FrpServerPreference.putAsync(trimmed) }
-                            "port" -> { serverPort = trimmed; FrpPortPreference.putAsync(trimmed) }
-                            "domain" -> { domain = trimmed; FrpDomainPreference.putAsync(trimmed) }
-                        }
-                    }
-                    showDialog = ""
+                    authToken = trimmed
+                    scope.launch(Dispatchers.IO) { NgrokAuthTokenPreference.putAsync(trimmed) }
+                    showTokenDialog = false
                 }) { Text(stringResource(Res.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = "" }) { Text(stringResource(Res.string.cancel)) }
+                TextButton(onClick = { showTokenDialog = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
             }
         )
     }
@@ -110,7 +94,7 @@ fun TunnelSettingsPage(navController: NavHostController) {
                 PCard {
                     PListItem(
                         title = stringResource(Res.string.enable_internet_access),
-                        subtitle = stringResource(Res.string.frp_description)
+                        subtitle = stringResource(Res.string.tunnel_description)
                     ) {
                         PSwitch(activated = tunnelEnabled) { enable ->
                             tunnelEnabled = enable
@@ -124,42 +108,27 @@ fun TunnelSettingsPage(navController: NavHostController) {
             }
             item {
                 VerticalSpace(dp = 16.dp)
-                Subtitle(text = stringResource(Res.string.frp_vps_config))
+                Subtitle(text = stringResource(Res.string.configuration))
                 PCard {
                     PListItem(
                         modifier = Modifier.clickable {
-                            dialogInput = serverAddr; showDialog = "server"
+                            dialogInput = authToken
+                            showTokenDialog = true
                         },
-                        title = stringResource(Res.string.frp_server),
-                        subtitle = serverAddr.ifEmpty { stringResource(Res.string.frp_required) },
-                        showMore = true
-                    )
-                    PListItem(
-                        modifier = Modifier.clickable {
-                            dialogInput = serverPort; showDialog = "port"
-                        },
-                        title = stringResource(Res.string.frp_port),
-                        subtitle = serverPort.ifEmpty { "7000" },
-                        showMore = true
-                    )
-                    PListItem(
-                        modifier = Modifier.clickable {
-                            dialogInput = domain; showDialog = "domain"
-                        },
-                        title = stringResource(Res.string.frp_domain),
-                        subtitle = domain.ifEmpty { stringResource(Res.string.frp_optional) },
+                        title = stringResource(Res.string.ngrok_auth_token),
+                        subtitle = if (authToken.isNotEmpty()) "****${authToken.takeLast(4)}" else stringResource(Res.string.ngrok_token_required),
                         showMore = true
                     )
                 }
             }
-            if (tunnelEnabled && serverAddr.isNotEmpty()) {
+            if (tunnelEnabled && authToken.isNotEmpty()) {
                 item {
                     VerticalSpace(dp = 16.dp)
                     Subtitle(text = stringResource(Res.string.status))
                     PCard {
                         PListItem(
                             title = stringResource(if (tunnelRunning) Res.string.connected else Res.string.disconnected),
-                            subtitle = if (tunnelUrl.isNotEmpty()) tunnelUrl else stringResource(Res.string.frp_description)
+                            subtitle = if (tunnelUrl.isNotEmpty()) tunnelUrl else ""
                         )
                     }
                     if (tunnelRunning && tunnelUrl.isNotEmpty()) {

@@ -253,6 +253,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     debugImplementation(libs.leakcanary.android)
+    implementation(libs.ngrok.java)
+    implementation(libs.ngrok.java.native)
     implementation(kotlin("stdlib", libs.versions.kotlin.get()))
 
     // For cryptography (Ed25519 support on all Android versions)

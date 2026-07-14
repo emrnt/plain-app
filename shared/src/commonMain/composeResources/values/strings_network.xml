@@ -95,13 +95,9 @@
     <string name="enable_adb_token">Enable ADB token</string>
     <string name="internet_access">Internet Access</string>
     <string name="enable_internet_access">Enable Internet Access</string>
-    <string name="frp_description">Access your phone from anywhere using frp (requires a VPS with public IP)</string>
-    <string name="frp_vps_config">VPS Configuration</string>
-    <string name="frp_server">VPS IP address</string>
-    <string name="frp_port">frp server port</string>
-    <string name="frp_domain">Domain name</string>
-    <string name="frp_required">Required — tap to set</string>
-    <string name="frp_optional">Optional</string>
+    <string name="tunnel_description">Access your phone from anywhere via ngrok</string>
+    <string name="ngrok_auth_token">Ngrok authtoken</string>
+    <string name="ngrok_token_required">Tap to set authtoken</string>
     <string name="tunnel_url_tips">Open %1$s in any browser to access your phone</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Not connected</string>
