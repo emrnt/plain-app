@@ -60,6 +60,9 @@ object TunnelManager {
             val binary = ensureBinary(context)
             stop()
 
+            val resolvConf = File(context.filesDir, "resolv.conf")
+            resolvConf.writeText("nameserver 1.1.1.1\nnameserver 8.8.8.8\n")
+
             val yml = File(context.filesDir, "ngrok.yml")
             yml.writeText("version: 2\nauthtoken: $authToken\n")
 
