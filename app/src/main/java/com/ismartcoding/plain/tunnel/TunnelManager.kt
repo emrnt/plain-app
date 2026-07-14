@@ -29,7 +29,7 @@ object TunnelManager {
         if (binary.exists()) return binary
 
         val abi = getAbi()
-        val assetPath = "ngrok/ngrok-$abi.gz"
+        val assetPath = "ngrok/ngrok-$abi"
         context.assets.open(assetPath).use { input ->
             GZIPInputStream(input).use { decompressed ->
                 binary.outputStream().use { output ->
