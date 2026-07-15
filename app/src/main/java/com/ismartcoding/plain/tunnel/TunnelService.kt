@@ -7,13 +7,16 @@ import android.os.IBinder
 import com.ismartcoding.plain.lib.logcat.LogCat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class TunnelService : Service() {
     private val binder = LocalBinder()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(job + Dispatchers.Main)
+    private var statusCollectionJob: Job? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): TunnelService = this@TunnelService
@@ -24,7 +27,7 @@ class TunnelService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogCat.d("TunnelService started")
         
-        scope.launch {
+        statusCollectionJob = scope.launch {
             try {
                 // Monitor tunnel status and handle auto-start/stop
                 TunnelManager.isRunning.collectLatest { isRunning ->
@@ -46,7 +49,8 @@ class TunnelService : Service() {
         super.onDestroy()
         LogCat.d("TunnelService destroyed")
         TunnelManager.stop()
-        scope.coroutineContext.cancel()
+        statusCollectionJob?.cancel()
+        job.cancel()
     }
 
     fun startTunnel(localPort: Int, authToken: String) {
